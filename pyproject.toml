@@ -19,6 +19,7 @@ dev = [
     "pandas>=2.3.0",
     "pyarrow>=20.0.0",
     "ipykernel>=6.29.5",
+    "types-boto3-custom",
 ]
 
 [tool.pytest.ini_options]
@@ -36,3 +37,6 @@ extend-select = ["I"]
 docstring-code-format = true
 
 [tool.uv]
+
+[tool.uv.sources]
+types-boto3-custom = { path = "vendored/types_boto3_custom-1.38.36-py3-none-any.whl" }
