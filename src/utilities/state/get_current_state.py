@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict
 
 import orjson
+from types_boto3_s3.client import S3Client
 
 from src.utilities.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
 from src.utilities.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
@@ -11,14 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 def get_current_state(
-    s3_client, bucket_name, key="lambda_state.json", s3_error_map=s3_error_map
+    s3_client: S3Client,
+    bucket_name: str,
+    key: str = "lambda_state.json",
+    s3_error_map: Dict[str, str] = s3_error_map,
 ) -> Dict[str, Any]:
     """
     Retrieves the current state JSON from an S3 bucket and returns it as a dictionary.
     If the state file does not exist, initializes an empty state and uploads it to S3.
 
     Args:
-        s3_client (Any): Boto3 S3 client instance.
+        s3_client (S3Client): Boto3 S3 client instance.
         bucket_name (str): Name of the S3 bucket.
         key (str, optional): Key/path of the state file in the bucket. Defaults to "lambda_state.json".
         s3_error_map (Dict[str, str], optional): Mapping of S3 error codes to messages.

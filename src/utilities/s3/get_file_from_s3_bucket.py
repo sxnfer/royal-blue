@@ -1,12 +1,13 @@
 from typing import Union
 
 from botocore.exceptions import ClientError
+from types_boto3_s3.client import S3Client
 
 from src.utilities.s3.s3_error_map import s3_error_map
 
 
 def get_file_from_s3_bucket(
-    client, bucket_name, key, error_map=s3_error_map
+    client: S3Client, bucket_name, key, error_map=s3_error_map
 ) -> dict[str, dict[str, Union[str, bytes]]]:
     """
     Retrieves a file object from the specified S3 bucket.

@@ -7,6 +7,7 @@ from pprint import pformat
 import boto3
 import orjson
 from psycopg import Error
+from types_boto3_s3.client import S3Client
 
 from src.db.connection import connect_db
 from src.db.db_helpers import (
@@ -74,7 +75,7 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
     Exception: If any other error occurs during the process, such as S3 upload failure or unexpected issues.
     """
     conn = connect_db("TOTESYS")
-    s3_client = boto3.client("s3")
+    s3_client: S3Client = boto3.client("s3")
     INGEST_ZONE_BUCKET_NAME = os.environ.get("INGEST_ZONE_BUCKET_NAME")
     LAMBDA_STATE_BUCKET_NAME = os.environ.get("LAMBDA_STATE_BUCKET_NAME")
     result = {"files_to_process": []}

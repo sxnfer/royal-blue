@@ -6,6 +6,7 @@ from datetime import datetime
 
 import boto3
 import orjson
+from types_boto3_s3.client import S3Client
 
 from src.utilities.dimensions.dim_counterparty_transform import (
     dim_counterparty_dataframe,
@@ -48,7 +49,7 @@ def lambda_handler(event, context):
     INGEST_ZONE_BUCKET_NAME = os.environ.get("INGEST_ZONE_BUCKET_NAME")
     LAMBDA_STATE_BUCKET_NAME = os.environ.get("LAMBDA_STATE_BUCKET_NAME")
 
-    s3_client = boto3.client("s3")
+    s3_client: S3Client = boto3.client("s3")
     logger.info("Starting Transformation Lambda")
 
     # # ! fix datetime not coming in

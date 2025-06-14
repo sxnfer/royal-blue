@@ -4,6 +4,7 @@ from types import FunctionType
 from typing import List
 
 import pandas as pd
+from types_boto3_s3.client import S3Client
 
 from src.utilities.extract_lambda_utils import create_parquet_metadata
 from src.utilities.parquets.create_data_frame_from_parquet import (
@@ -18,14 +19,14 @@ from src.utilities.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
 
 
 def get_dataframes_from_files_to_process(
-    client, bucket: str, files_to_process: List[FilesToProcessItem]
+    s3_client: S3Client, bucket: str, files_to_process: List[FilesToProcessItem]
 ):
     all_df_to_process = {}
     for file_data in files_to_process:
         table_name = file_data.table_name
         key = file_data.key
 
-        response = get_file_from_s3_bucket(client, bucket, key)
+        response = get_file_from_s3_bucket(s3_client, bucket, key)
 
         parquet = response["success"]["data"]
 
@@ -70,7 +71,7 @@ def add_log_to_result_and_state(
 
 def initialize_dim_date(
     create_dim_date_df_func: FunctionType,
-    s3_client,
+    s3_client: S3Client,
     bucket_name: str,
     result: dict,
     final_state,
@@ -99,7 +100,7 @@ def initialize_dim_date(
 
 
 def get_log_item_df_s3_upload(
-    s3_client,
+    s3_client: S3Client,
     bucket_name: str,
     last_updated: datetime,
     new_table_name: str,

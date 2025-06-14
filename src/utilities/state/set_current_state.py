@@ -1,6 +1,7 @@
 import logging
 
 import orjson
+from types_boto3_s3.client import S3Client
 
 from src.utilities.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
 
@@ -8,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def set_current_state(
-    current_state: dict, bucket_name, s3_client, file_name="lambda_state.json"
+    current_state: dict, bucket_name, s3_client: S3Client, file_name="lambda_state.json"
 ) -> dict:
     """
     Converts the given dictionary to JSON and uploads it to S3 as `lambda_state.json`.
@@ -16,7 +17,7 @@ def set_current_state(
     Args:
         current_state (dict): Dictionary representing the current state.
         bucket_name (str): Name of the S3 bucket.
-        s3_client (boto3.client): S3 client instance.
+        s3_client (S3Client): S3 client instance.
         file_name (str): Name of the file to upload. Defaults to 'lambda_state.json'.
 
     Returns:

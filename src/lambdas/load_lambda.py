@@ -5,6 +5,7 @@ import os
 import boto3
 import orjson
 import pandas as pd
+from types_boto3_s3.client import S3Client
 
 from src.db.connection import connect_db
 from src.utilities.load_lambda_utils import create_db_entries_from_df
@@ -23,7 +24,7 @@ logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event: dict, context: EmptyDict):
-    s3_client = boto3.client("s3")
+    s3_client: S3Client = boto3.client("s3")
     PROCESS_ZONE_BUCKET_NAME = os.environ.get("PROCESS_ZONE_BUCKET_NAME")
     # LAMBDA_STATE_BUCKET_NAME = os.environ.get("LAMBDA_STATE_BUCKET_NAME")
     conn = connect_db("DATAWAREHOUSE")

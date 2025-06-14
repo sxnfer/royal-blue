@@ -5,6 +5,7 @@ import boto3
 import pandas as pd
 import pytest
 from moto import mock_aws
+from types_boto3_s3.client import S3Client
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -20,7 +21,7 @@ def aws_credentials():
 @pytest.fixture(scope="function")
 def s3_client(aws_credentials):
     with mock_aws():
-        client = boto3.client("s3", region_name="eu-west-2")
+        client: S3Client = boto3.client("s3", region_name="eu-west-2")
         yield client
 
 

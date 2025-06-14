@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import pytest
 from botocore.exceptions import ClientError
 from moto import mock_aws
+from types_boto3_s3.client import S3Client
 
 from src.utilities.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
 
@@ -50,7 +51,7 @@ class TestS3AddFunctionality:
         key = "test_obj"
         body = '{"test": "royal blue s3 bucket failure"}'
 
-        mock_client = Mock()
+        mock_client = Mock(spec=S3Client)
         mock_client.put_object.side_effect = ClientError(
             error_response={"Error": {"Message": message, "Code": error_code}},
             operation_name="PutObject",
@@ -67,7 +68,7 @@ class TestS3AddFunctionality:
         "Should return an error message for unexpected non-200 HTTP response"
     )
     def test_add_to_s3_non_200_response(self):
-        mock_client = Mock()
+        mock_client = Mock(spec=S3Client)
         mock_client.put_object.return_value = {
             "ResponseMetadata": {"HTTPStatusCode": 500}
         }
@@ -81,7 +82,7 @@ class TestS3AddFunctionality:
         "Should return a generic error message if unexpected exception occurs"
     )
     def test_add_to_s3_generic_exception(self):
-        mock_client = Mock()
+        mock_client = Mock(spec=S3Client)
         mock_client.put_object.side_effect = ValueError("Unexpected failure")
 
         response = add_file_to_s3_bucket(mock_client, "bucket", "key", "body")
