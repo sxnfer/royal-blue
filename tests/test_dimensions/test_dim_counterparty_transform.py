@@ -1,33 +1,29 @@
 import pandas as pd
 import pytest
 
-from src.utilities.dimensions.dim_counterparty_transform import (
+from src.utils.dimensions.dim_counterparty_transform import (
     dim_counterparty_dataframe,
 )
 
 
 @pytest.fixture
 def valid_dataframes():
-    counterparty_df = pd.DataFrame(
-        {
-            "counterparty_id": [1],
-            "counterparty_legal_name": ["ABC Corp"],
-            "legal_address_id": [10],
-        }
-    )
+    counterparty_df = pd.DataFrame({
+        "counterparty_id": [1],
+        "counterparty_legal_name": ["ABC Corp"],
+        "legal_address_id": [10],
+    })
 
-    address_df = pd.DataFrame(
-        {
-            "legal_address_id": [10],
-            "address_line_1": ["123 Main St"],
-            "address_line_2": ["Suite 100"],
-            "district": ["District A"],
-            "city": ["Metropolis"],
-            "postal_code": ["12345"],
-            "country": ["USA"],
-            "phone": ["555-1234"],
-        }
-    )
+    address_df = pd.DataFrame({
+        "legal_address_id": [10],
+        "address_line_1": ["123 Main St"],
+        "address_line_2": ["Suite 100"],
+        "district": ["District A"],
+        "city": ["Metropolis"],
+        "postal_code": ["12345"],
+        "country": ["USA"],
+        "phone": ["555-1234"],
+    })
 
     return {"counterparty": counterparty_df, "address": address_df}
 
@@ -88,26 +84,22 @@ class TestDimCounterpartyDataframe:
         "check should raise KeyError when required address column is missing"
     )
     def test_missing_address_column(self):
-        address_df = pd.DataFrame(
-            {
-                "legal_address_id": [10],
-                # 'address_line_1' : intentionally missing
-                "address_line_2": ["Suite 100"],
-                "district": ["District A"],
-                "city": ["Metropolis"],
-                "postal_code": ["12345"],
-                "country": ["USA"],
-                "phone": ["555-1234"],
-            }
-        )
+        address_df = pd.DataFrame({
+            "legal_address_id": [10],
+            # 'address_line_1' : intentionally missing
+            "address_line_2": ["Suite 100"],
+            "district": ["District A"],
+            "city": ["Metropolis"],
+            "postal_code": ["12345"],
+            "country": ["USA"],
+            "phone": ["555-1234"],
+        })
 
-        counterparty_df = pd.DataFrame(
-            {
-                "counterparty_id": [1],
-                "counterparty_legal_name": ["ABC Corp"],
-                "legal_address_id": [10],
-            }
-        )
+        counterparty_df = pd.DataFrame({
+            "counterparty_id": [1],
+            "counterparty_legal_name": ["ABC Corp"],
+            "legal_address_id": [10],
+        })
 
         data = {"counterparty": counterparty_df, "address": address_df}
 

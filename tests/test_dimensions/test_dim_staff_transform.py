@@ -1,28 +1,24 @@
 import pandas as pd
 import pytest
 
-from src.utilities.dimensions.dim_staff_transform import dim_staff_dataframe
+from src.utils.dimensions.dim_staff_transform import dim_staff_dataframe
 
 
 @pytest.fixture
 def valid_dataframes():
-    staff_df = pd.DataFrame(
-        {
-            "staff_id": [1],
-            "first_name": ["John"],
-            "last_name": ["Doe"],
-            "department_id": [100],
-            "email_address": ["john.doe@example.com"],
-        }
-    )
+    staff_df = pd.DataFrame({
+        "staff_id": [1],
+        "first_name": ["John"],
+        "last_name": ["Doe"],
+        "department_id": [100],
+        "email_address": ["john.doe@example.com"],
+    })
 
-    department_df = pd.DataFrame(
-        {
-            "department_id": [100],
-            "department_name": ["Engineering"],
-            "location": ["Building A"],
-        }
-    )
+    department_df = pd.DataFrame({
+        "department_id": [100],
+        "department_name": ["Engineering"],
+        "location": ["Building A"],
+    })
 
     return {"staff": staff_df, "department": department_df}
 
@@ -59,22 +55,18 @@ class TestDimStaffDataframe:
 
     @pytest.mark.it("check .drop_duplicates() removes duplicate rows")
     def test_drop_duplicates_effect(self):
-        staff_df = pd.DataFrame(
-            {
-                "staff_id": [1, 1],
-                "first_name": ["John", "John"],
-                "last_name": ["Doe", "Doe"],
-                "department_id": [100, 100],
-                "email_address": ["john.doe@example.com", "john.doe@example.com"],
-            }
-        )
-        department_df = pd.DataFrame(
-            {
-                "department_id": [100],
-                "department_name": ["Engineering"],
-                "location": ["Building A"],
-            }
-        )
+        staff_df = pd.DataFrame({
+            "staff_id": [1, 1],
+            "first_name": ["John", "John"],
+            "last_name": ["Doe", "Doe"],
+            "department_id": [100, 100],
+            "email_address": ["john.doe@example.com", "john.doe@example.com"],
+        })
+        department_df = pd.DataFrame({
+            "department_id": [100],
+            "department_name": ["Engineering"],
+            "location": ["Building A"],
+        })
         data = {"staff": staff_df, "department": department_df}
         result = dim_staff_dataframe(**data)
         # Should only have one unique row after drop_duplicates
@@ -82,22 +74,18 @@ class TestDimStaffDataframe:
 
     @pytest.mark.it("check left join behavior with unmatched department_id")
     def test_left_join_with_no_matching_department(self):
-        staff_df = pd.DataFrame(
-            {
-                "staff_id": [1, 2],
-                "first_name": ["John", "Jane"],
-                "last_name": ["Doe", "Smith"],
-                "department_id": [100, 999],  # 999 does not exist in department_df
-                "email_address": ["john.doe@example.com", "jane.smith@example.com"],
-            }
-        )
-        department_df = pd.DataFrame(
-            {
-                "department_id": [100],
-                "department_name": ["Engineering"],
-                "location": ["Building A"],
-            }
-        )
+        staff_df = pd.DataFrame({
+            "staff_id": [1, 2],
+            "first_name": ["John", "Jane"],
+            "last_name": ["Doe", "Smith"],
+            "department_id": [100, 999],  # 999 does not exist in department_df
+            "email_address": ["john.doe@example.com", "jane.smith@example.com"],
+        })
+        department_df = pd.DataFrame({
+            "department_id": [100],
+            "department_name": ["Engineering"],
+            "location": ["Building A"],
+        })
         data = {"staff": staff_df, "department": department_df}
         result = dim_staff_dataframe(**data)
         assert result.shape[0] == 2
@@ -126,23 +114,19 @@ class TestDimStaffDataframe:
         "check should raise KeyError when required department column is missing"
     )
     def test_missing_department_column(self):
-        staff_df = pd.DataFrame(
-            {
-                "staff_id": [1],
-                "first_name": ["John"],
-                "last_name": ["Doe"],
-                "department_id": [100],
-                "email_address": ["john.doe@example.com"],
-            }
-        )
+        staff_df = pd.DataFrame({
+            "staff_id": [1],
+            "first_name": ["John"],
+            "last_name": ["Doe"],
+            "department_id": [100],
+            "email_address": ["john.doe@example.com"],
+        })
 
-        department_df = pd.DataFrame(
-            {
-                "department_id": [100],
-                # "department_name" intentionally missing
-                "location": ["Building A"],
-            }
-        )
+        department_df = pd.DataFrame({
+            "department_id": [100],
+            # "department_name" intentionally missing
+            "location": ["Building A"],
+        })
 
         data = {"staff": staff_df, "department": department_df}
 

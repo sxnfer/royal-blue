@@ -9,25 +9,25 @@ import orjson
 from psycopg import Error
 from types_boto3_s3.client import S3Client
 
-from src.db.connection import connect_db
-from src.db.db_helpers import (
+from src.utils.db.connection import connect_db
+from src.utils.db.db_helpers import (
     get_table_data,
     get_totesys_table_names,
     handle_psycopg_exceptions,
 )
-from src.utilities.extract_lambda_utils import (
+from src.utils.extract_lambda_utils import (
     create_data_frame_from_list,
     create_parquet_metadata,
     get_last_updated_from_raw_table_data,
     initialize_table_state,
 )
-from src.utilities.parquets.create_parquet_from_data_frame import (
+from src.utils.parquets.create_parquet_from_data_frame import (
     create_parquet_from_data_frame,
 )
-from src.utilities.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
-from src.utilities.state.get_current_state import get_current_state
-from src.utilities.state.set_current_state import set_current_state
-from src.utilities.typing_utils import EmptyDict
+from src.utils.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
+from src.utils.state.get_current_state import get_current_state
+from src.utils.state.set_current_state import set_current_state
+from src.utils.typing_utils import EmptyDict
 
 logging.basicConfig(
     level=logging.INFO,

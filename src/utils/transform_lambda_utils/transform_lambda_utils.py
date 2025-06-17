@@ -6,16 +6,16 @@ from typing import List
 import pandas as pd
 from types_boto3_s3.client import S3Client
 
-from src.utilities.extract_lambda_utils import create_parquet_metadata
-from src.utilities.parquets.create_data_frame_from_parquet import (
+from src.utils.extract_lambda_utils import create_parquet_metadata
+from src.utils.parquets.create_data_frame_from_parquet import (
     create_data_frame_from_parquet,
 )
-from src.utilities.parquets.create_parquet_from_data_frame import (
+from src.utils.parquets.create_parquet_from_data_frame import (
     create_parquet_from_data_frame,
 )
-from src.utilities.pydantic_models import FilesToProcessItem
-from src.utilities.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
-from src.utilities.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
+from src.utils.pydantic_models import FilesToProcessItem
+from src.utils.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
+from src.utils.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
 
 
 def get_dataframes_from_files_to_process(

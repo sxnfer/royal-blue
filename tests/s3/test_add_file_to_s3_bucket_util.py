@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError
 from moto import mock_aws
 from types_boto3_s3.client import S3Client
 
-from src.utilities.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
+from src.utils.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
 
 
 @pytest.mark.describe("add_file_to_s3_bucket Utility Function Behaviour")

@@ -3,7 +3,7 @@ from io import BytesIO
 
 import pandas as pd
 
-from src.utilities.custom_errors import InvalidDataFrame
+from src.utils.custom_errors import InvalidDataFrame
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

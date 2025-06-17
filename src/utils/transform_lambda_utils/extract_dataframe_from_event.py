@@ -3,16 +3,16 @@ from typing import Dict
 import boto3
 import pandas as pd
 
-from src.utilities.parquets.create_data_frame_from_parquet import (
+from src.utils.parquets.create_data_frame_from_parquet import (
     create_data_frame_from_parquet,
 )
-from src.utilities.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
+from src.utils.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
 
 BUCKET_NAME = "ingestion-zone-20250530151335299400000005"
 client = boto3.client("s3")
 
 
-def extract_dataframes_from_event(client, event) -> Dict[str, pd.DataFrame]:
+def get_dataframes_from_event(client, event) -> Dict[str, pd.DataFrame]:
     """
     Extracts data from a list of S3 Parquet file metadata and returns table-specific DataFrames.
 

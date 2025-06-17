@@ -4,9 +4,9 @@ from typing import Any, Dict
 import orjson
 from types_boto3_s3.client import S3Client
 
-from src.utilities.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
-from src.utilities.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
-from src.utilities.s3.s3_error_map import s3_error_map
+from src.utils.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
+from src.utils.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
+from src.utils.s3.s3_error_map import s3_error_map
 
 logger = logging.getLogger(__name__)
 

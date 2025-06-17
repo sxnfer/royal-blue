@@ -7,13 +7,13 @@ import orjson
 import pandas as pd
 from types_boto3_s3.client import S3Client
 
-from src.db.connection import connect_db
-from src.utilities.load_lambda_utils import create_db_entries_from_df
-from src.utilities.parquets.create_data_frame_from_parquet import (
+from src.utils.db.connection import connect_db
+from src.utils.load_lambda_utils import create_db_entries_from_df
+from src.utils.parquets.create_data_frame_from_parquet import (
     create_data_frame_from_parquet,
 )
-from src.utilities.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
-from src.utilities.typing_utils import EmptyDict
+from src.utils.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
+from src.utils.typing_utils import EmptyDict
 
 logging.basicConfig(
     level=logging.INFO,
@@ -68,19 +68,15 @@ def lambda_handler(event: dict, context: EmptyDict):
             )
 
             if file_data["table_name"].startswith("dim"):
-                dims_to_process.append(
-                    {
-                        "table_name": file_data["table_name"],
-                        "data_frame": df,
-                    }
-                )
+                dims_to_process.append({
+                    "table_name": file_data["table_name"],
+                    "data_frame": df,
+                })
             else:
-                facts_to_process.append(
-                    {
-                        "table_name": file_data["table_name"],
-                        "data_frame": df,
-                    }
-                )
+                facts_to_process.append({
+                    "table_name": file_data["table_name"],
+                    "data_frame": df,
+                })
 
         with conn:
             for file_data in dims_to_process:

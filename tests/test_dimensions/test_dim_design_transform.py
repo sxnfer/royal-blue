@@ -1,20 +1,18 @@
 import pandas as pd
 import pytest
 
-from src.utilities.dimensions.dim_design_transform import dim_design_dataframe
+from src.utils.dimensions.dim_design_transform import dim_design_dataframe
 
 
 @pytest.fixture
 def mock_design_df():
-    return pd.DataFrame(
-        {
-            "design_id": [1, 25],
-            "created_at": ["02/04/2021", "30/05/2024"],
-            "design_name": ["Logo", "Motif"],
-            "file_location": ["/designs/logos/", "/designs/motifs/"],
-            "file_name": ["bratz_logo.png", "barbie_motif.png"],
-        }
-    )
+    return pd.DataFrame({
+        "design_id": [1, 25],
+        "created_at": ["02/04/2021", "30/05/2024"],
+        "design_name": ["Logo", "Motif"],
+        "file_location": ["/designs/logos/", "/designs/motifs/"],
+        "file_name": ["bratz_logo.png", "barbie_motif.png"],
+    })
 
 
 def test_dim_design_in_DF(mock_design_df):

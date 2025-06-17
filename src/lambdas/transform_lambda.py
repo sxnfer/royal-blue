@@ -8,27 +8,27 @@ import boto3
 import orjson
 from types_boto3_s3.client import S3Client
 
-from src.utilities.dimensions.dim_counterparty_transform import (
+from src.utils.dimensions.dim_counterparty_transform import (
     dim_counterparty_dataframe,
 )
-from src.utilities.dimensions.dim_currency_transform import dim_currency_dataframe
-from src.utilities.dimensions.dim_date_transform import dim_date_dataframe
-from src.utilities.dimensions.dim_design_transform import dim_design_dataframe
-from src.utilities.dimensions.dim_location_transform import dim_location_dataframe
-from src.utilities.dimensions.dim_staff_transform import dim_staff_dataframe
-from src.utilities.facts.create_fact_sales_order_from_df import (
+from src.utils.dimensions.dim_currency_transform import dim_currency_dataframe
+from src.utils.dimensions.dim_date_transform import dim_date_dataframe
+from src.utils.dimensions.dim_design_transform import dim_design_dataframe
+from src.utils.dimensions.dim_location_transform import dim_location_dataframe
+from src.utils.dimensions.dim_staff_transform import dim_staff_dataframe
+from src.utils.facts.create_fact_sales_order_from_df import (
     create_fact_sales_order_from_df,
 )
-from src.utilities.parquets.create_parquet_from_data_frame import (
+from src.utils.parquets.create_parquet_from_data_frame import (
     create_parquet_from_data_frame,
 )
-from src.utilities.pydantic_models import (
+from src.utils.pydantic_models import (
     FilesToProcessList,
     State,
 )
-from src.utilities.state.get_current_state import get_current_state
-from src.utilities.state.set_current_state import set_current_state
-from src.utilities.transform_lambda_utils.transform_lambda_utils import (
+from src.utils.state.get_current_state import get_current_state
+from src.utils.state.set_current_state import set_current_state
+from src.utils.transform_lambda_utils.transform_lambda_utils import (
     add_log_to_result_and_state,
     get_dataframes_from_files_to_process,
     get_log_item_df_s3_upload,

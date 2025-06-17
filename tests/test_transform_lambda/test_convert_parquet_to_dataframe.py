@@ -3,31 +3,27 @@ from io import BytesIO
 import pandas as pd
 import pytest
 
-from src.utilities.parquets.create_data_frame_from_parquet import (
+from src.utils.parquets.create_data_frame_from_parquet import (
     create_data_frame_from_parquet,
 )
 
 
 @pytest.fixture
 def test_dataframe():
-    return pd.DataFrame(
-        {
-            "name": ["Charley", "San", "Oliver"],
-            "favourite_icecream": ["Strawberry", "Chocolate", "Vanilla"],
-        }
-    )
+    return pd.DataFrame({
+        "name": ["Charley", "San", "Oliver"],
+        "favourite_icecream": ["Strawberry", "Chocolate", "Vanilla"],
+    })
 
 
 @pytest.mark.describe("parquet_to_dataframe Utility Function Behaviour")
 class TestCreateDataFramesfromParquets:
     @pytest.mark.it("Should return a valid DataFrame from a Parquet bytes")
     def test_returns_data_in_parquet_format(self, test_dataframe):
-        test_dataframe = pd.DataFrame(
-            {
-                "name": ["Charley", "San", "Oliver"],
-                "favourite_icecream": ["Strawberry", "Chocolate", "Vanilla"],
-            }
-        )
+        test_dataframe = pd.DataFrame({
+            "name": ["Charley", "San", "Oliver"],
+            "favourite_icecream": ["Strawberry", "Chocolate", "Vanilla"],
+        })
 
         buffer = BytesIO()
         test_dataframe.to_parquet(buffer, index=False)

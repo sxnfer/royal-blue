@@ -4,7 +4,7 @@ import pandas as pd
 from psycopg import Connection, sql
 from psycopg.rows import DictRow, tuple_row
 
-from src.db.connection import connect_db
+from src.utils.db.connection import connect_db
 
 logger = logging.getLogger(__name__)
 

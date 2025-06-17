@@ -1,6 +1,6 @@
 import pytest
 
-from src.utilities.dimensions.dim_date_transform import (
+from src.utils.dimensions.dim_date_transform import (
     dim_date_dataframe,
 )
 

@@ -3,7 +3,7 @@ from typing import Union
 from botocore.exceptions import ClientError
 from types_boto3_s3.client import S3Client
 
-from src.utilities.s3.s3_error_map import s3_error_map
+from src.utils.s3.s3_error_map import s3_error_map
 
 
 def get_file_from_s3_bucket(

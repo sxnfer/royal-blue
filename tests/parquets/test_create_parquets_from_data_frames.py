@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pandas as pd
 import pytest
 
-from src.utilities.parquets.create_parquets_from_data_frames import (
+from src.utils.parquets.create_parquets_from_data_frames import (
     create_parquets_from_data_frames,
 )
 

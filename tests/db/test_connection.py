@@ -5,7 +5,7 @@ import pytest
 from psycopg import Connection, OperationalError
 from psycopg.rows import dict_row
 
-from src.db.connection import connect_db
+from src.utils.db.connection import connect_db
 
 
 @pytest.mark.describe("Tests connect_db")
@@ -33,7 +33,9 @@ class TestConnectDb:
     @pytest.mark.it("check that it raises an exception when connection fails")
     def test_connect_db_exception(self, patched_envs):
         error_message = "Connection failed"
-        with patch("src.db.connection.connect", side_effect=Exception(error_message)):
+        with patch(
+            "src.utils.db.connection.connect", side_effect=Exception(error_message)
+        ):
             with pytest.raises(Exception, match=error_message):
                 connect_db("TOTESYS")
 
@@ -48,7 +50,9 @@ class TestConnectDb:
     @pytest.mark.it("check that if it raises exceptions, they are logged by logger")
     def test_logs_errors(self, patched_envs, caplog):
         error_massage = "Connection failed"
-        with patch("src.db.connection.connect", side_effect=Exception(error_massage)):
+        with patch(
+            "src.utils.db.connection.connect", side_effect=Exception(error_massage)
+        ):
             with caplog.at_level(logging.ERROR):
                 with pytest.raises(Exception):
                     connect_db("TOTESYS")

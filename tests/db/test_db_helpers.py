@@ -6,14 +6,14 @@ from unittest.mock import MagicMock
 import pytest
 from psycopg import Connection, errors
 
-from src.db.connection import connect_db
-from src.db.db_helpers import (
+from src.utils.db.connection import connect_db
+from src.utils.db.db_helpers import (
     filter_out_values,
     get_table_data,
     get_table_last_updated_timestamp,
     get_totesys_table_names,
 )
-from src.db.error_map import ERROR_MAP
+from src.utils.db.error_map import ERROR_MAP
 
 
 @pytest.mark.describe("Test filter_out_values")

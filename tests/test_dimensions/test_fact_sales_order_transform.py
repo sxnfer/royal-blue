@@ -1,28 +1,26 @@
 import pandas as pd
 import pytest
 
-from src.utilities.facts.create_fact_sales_order_from_df import (
+from src.utils.facts.create_fact_sales_order_from_df import (
     create_fact_sales_order_from_df,
 )
 
 
 @pytest.fixture
 def mock_sales_order_df():
-    return pd.DataFrame(
-        {
-            "sales_order_id": [1],
-            "created_at": ["2025-06-01T10:30:00"],
-            "last_updated": ["2025-06-02T15:45:00"],
-            "design_id": [101],
-            "staff_id": [501],
-            "counterparty_id": [301],
-            "units_sold": [10],
-            "unit_price": [5.99],
-            "currency_id": [1],
-            "agreed_payment_date": ["2025-06-10"],
-            "agreed_delivery_date": ["2025-06-15"],
-        }
-    )
+    return pd.DataFrame({
+        "sales_order_id": [1],
+        "created_at": ["2025-06-01T10:30:00"],
+        "last_updated": ["2025-06-02T15:45:00"],
+        "design_id": [101],
+        "staff_id": [501],
+        "counterparty_id": [301],
+        "units_sold": [10],
+        "unit_price": [5.99],
+        "currency_id": [1],
+        "agreed_payment_date": ["2025-06-10"],
+        "agreed_delivery_date": ["2025-06-15"],
+    })
 
 
 @pytest.mark.describe("fact_sales_order_dataframe Transformation Function")
@@ -91,15 +89,13 @@ class TestFactSalesOrder:
 
     @pytest.mark.it("Should raise no error with minimal valid columns")
     def test_fact_sales_order_minimal_required_columns(self):
-        minimal_df = pd.DataFrame(
-            {
-                "created_at": ["2025-01-01T08:00:00"],
-                "last_updated": ["2025-01-02T09:00:00"],
-                "staff_id": [999],
-                "agreed_payment_date": ["2025-01-03"],
-                "agreed_delivery_date": ["2025-01-04"],
-            }
-        )
+        minimal_df = pd.DataFrame({
+            "created_at": ["2025-01-01T08:00:00"],
+            "last_updated": ["2025-01-02T09:00:00"],
+            "staff_id": [999],
+            "agreed_payment_date": ["2025-01-03"],
+            "agreed_delivery_date": ["2025-01-04"],
+        })
 
         result = create_fact_sales_order_from_df(minimal_df)
 

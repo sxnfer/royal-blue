@@ -5,7 +5,7 @@ from typing import List
 from psycopg import Connection, sql
 from psycopg.rows import DictRow
 
-from src.db.error_map import ERROR_MAP
+from src.utils.db.error_map import ERROR_MAP
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

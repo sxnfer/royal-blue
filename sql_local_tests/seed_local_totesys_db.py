@@ -2,8 +2,8 @@ from pprint import pprint
 
 import pandas as pd
 
-from src.db.connection import connect_db
-from src.utilities.load_lambda_utils import create_db_entries_from_df
+from src.utils.db.connection import connect_db
+from src.utils.load_lambda_utils import create_db_entries_from_df
 
 if __name__ == "__main__":
     address_df = pd.read_parquet(

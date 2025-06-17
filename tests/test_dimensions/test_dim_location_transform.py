@@ -1,23 +1,21 @@
 import pandas as pd
 import pytest
 
-from src.utilities.dimensions.dim_location_transform import dim_location_dataframe
+from src.utils.dimensions.dim_location_transform import dim_location_dataframe
 
 
 @pytest.fixture
 def mock_address_df():
-    return pd.DataFrame(
-        {
-            "address_id": ["1", "25"],
-            "address_line_1": ["123 Lane", "456 Avenue"],
-            "address_line_2": ["Suite 4", "Flat 5"],
-            "district": ["Central", "North"],
-            "city": ["London", "Bristol"],
-            "postal_code": ["E1 6AN", "BS1 4TB"],
-            "country": ["UK", "UK"],
-            "phone": ["0123456789", "0123456774"],
-        }
-    )
+    return pd.DataFrame({
+        "address_id": ["1", "25"],
+        "address_line_1": ["123 Lane", "456 Avenue"],
+        "address_line_2": ["Suite 4", "Flat 5"],
+        "district": ["Central", "North"],
+        "city": ["London", "Bristol"],
+        "postal_code": ["E1 6AN", "BS1 4TB"],
+        "country": ["UK", "UK"],
+        "phone": ["0123456789", "0123456774"],
+    })
 
 
 @pytest.mark.describe("dim_location_dataframe Function Behaviour")

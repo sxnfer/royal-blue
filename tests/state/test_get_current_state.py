@@ -4,7 +4,7 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from src.utilities.state.get_current_state import get_current_state
+from src.utils.state.get_current_state import get_current_state
 
 
 @pytest.fixture

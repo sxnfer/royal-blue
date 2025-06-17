@@ -75,5 +75,7 @@ def mock_connect(
 
 @pytest.fixture(scope="function")
 def patched_connect(mock_connect):
-    with patch("src.db.connection.connect", return_value=mock_connect) as mock_patch:
+    with patch(
+        "src.utils.db.connection.connect", return_value=mock_connect
+    ) as mock_patch:
         yield mock_patch
