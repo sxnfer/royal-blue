@@ -14,7 +14,7 @@
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
         },
-        "editor.defaultFormatter": "charliermarsh.ruff"
+        "editor.defaultFormatter": "charliermarsh.ruff",
     },
     "ruff.format.preview": true,
     "ruff.lint.preview": true,
@@ -24,5 +24,22 @@
                 "F401"
             ]
         }
-    }
+    },
+    // make sure vs code atutomatically adds the src folder to imports
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "python.analysis.extraPaths": [],
+    "python.analysis.autoSearchPaths": false,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.importFormat": "absolute",
+    "python.analysis.include": [
+        "**/*.py"
+    ],
+    "python.analysis.exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        ".venv/**"
+    ],
+    "python.analysis.packageIndexDepths": [],
+    "python.analysis.stubPath": "",
+    "python.terminal.activateEnvironment": true
 }
