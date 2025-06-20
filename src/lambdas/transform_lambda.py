@@ -25,6 +25,7 @@ from src.utils.parquets.create_parquet_from_data_frame import (
 from src.utils.pydantic_models import (
     FilesToProcessList,
     State,
+    TransformSettings,
 )
 from src.utils.state.get_current_state import get_current_state
 from src.utils.state.set_current_state import set_current_state
@@ -45,9 +46,11 @@ logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event, context):
-    PROCESS_ZONE_BUCKET_NAME = os.environ.get("PROCESS_ZONE_BUCKET_NAME")
-    INGEST_ZONE_BUCKET_NAME = os.environ.get("INGEST_ZONE_BUCKET_NAME")
-    LAMBDA_STATE_BUCKET_NAME = os.environ.get("LAMBDA_STATE_BUCKET_NAME")
+    transform_settings = TransformSettings(
+        process_zone_bucket=os.environ.get("PROCESS_ZONE_BUCKET_NAME"),  # type: ignore
+        ingest_zone_bucket=os.environ.get("INGEST_ZONE_BUCKET_NAME"),  # type: ignore
+        lambda_state_bucket=os.environ.get("LAMBDA_STATE_BUCKET_NAME"),  # type: ignore
+    )
 
     s3_client: S3Client = boto3.client("s3")
     logger.info("Starting Transformation Lambda")
@@ -57,7 +60,7 @@ def lambda_handler(event, context):
         orjson.loads(json.dumps(event)).get("files_to_process")
     )
     current_state = State.model_validate(
-        get_current_state(s3_client, LAMBDA_STATE_BUCKET_NAME)
+        get_current_state(s3_client, transform_settings.lambda_state_bucket)
     ).model_dump()
 
     final_state = deepcopy(current_state)
@@ -80,7 +83,7 @@ def lambda_handler(event, context):
         initialize_dim_date(
             create_dim_date_df_func=dim_date_dataframe,  # type: ignore
             s3_client=s3_client,
-            bucket_name=PROCESS_ZONE_BUCKET_NAME,  # type: ignore
+            bucket_name=transform_settings.process_zone_bucket,  # type: ignore
             result=result,
             final_state=final_state,
         )
@@ -91,7 +94,7 @@ def lambda_handler(event, context):
 
     all_tables_dfs: dict = get_dataframes_from_files_to_process(
         s3_client,
-        INGEST_ZONE_BUCKET_NAME,  # type: ignore
+        transform_settings.ingest_zone_bucket,  # type: ignore
         files_to_process,
     )
 
@@ -137,7 +140,7 @@ def lambda_handler(event, context):
 
         log_item = get_log_item_df_s3_upload(
             s3_client=s3_client,
-            bucket_name=PROCESS_ZONE_BUCKET_NAME,  # type: ignore
+            bucket_name=transform_settings.process_zone_bucket,  # type: ignore
             last_updated=last_updated,
             new_table_name=new_table_name,
             df=df,
@@ -156,7 +159,7 @@ def lambda_handler(event, context):
             f"Transform for {table_name} --> {new_table_name} completed with {len(df)} new records transformed."
         )
 
-    set_current_state(final_state, LAMBDA_STATE_BUCKET_NAME, s3_client)
+    set_current_state(final_state, transform_settings.lambda_state_bucket, s3_client)
 
     logger.info("Transform process successfully ended.")
 

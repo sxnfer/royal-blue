@@ -28,6 +28,7 @@ from src.utils.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
 from src.utils.state.get_current_state import get_current_state
 from src.utils.state.set_current_state import set_current_state
 from src.utils.typing_utils import EmptyDict
+from utils.pydantic_models import ExtractSettings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,8 +77,10 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
     """
     conn = connect_db("TOTESYS")
     s3_client: S3Client = boto3.client("s3")
-    INGEST_ZONE_BUCKET_NAME = os.environ.get("INGEST_ZONE_BUCKET_NAME")
-    LAMBDA_STATE_BUCKET_NAME = os.environ.get("LAMBDA_STATE_BUCKET_NAME")
+    extract_settings = ExtractSettings(
+        ingest_zone_bucket=os.environ.get("INGEST_ZONE_BUCKET_NAME"),  # type: ignore
+        lambda_state_bucket=os.environ.get("LAMBDA_STATE_BUCKET_NAME"),  # type: ignore
+    )
     result = {"files_to_process": []}
 
     try:
@@ -89,7 +92,9 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
             for table_name in totesys_tables:
                 logger.info(f"Starting extraction of {table_name}")
 
-                current_state = get_current_state(s3_client, LAMBDA_STATE_BUCKET_NAME)
+                current_state = get_current_state(
+                    s3_client, extract_settings.lambda_state_bucket
+                )
                 current_state = initialize_table_state(current_state, table_name)
 
                 current_state_last_updated: datetime | None = current_state[
@@ -119,7 +124,7 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
                 )
 
                 response = add_file_to_s3_bucket(
-                    s3_client, INGEST_ZONE_BUCKET_NAME, key, parquet_file
+                    s3_client, extract_settings.ingest_zone_bucket, key, parquet_file
                 )
 
                 # ! REVIEW should I get raw error object from add_file_to_s3_bucket function??
@@ -146,7 +151,7 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
                 )
 
                 set_current_state(
-                    updated_state_all, LAMBDA_STATE_BUCKET_NAME, s3_client
+                    updated_state_all, extract_settings.lambda_state_bucket, s3_client
                 )
 
                 logger.info(f"Finish extracting table:{table_name} data")

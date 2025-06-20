@@ -14,6 +14,7 @@ from src.utils.parquets.create_data_frame_from_parquet import (
 )
 from src.utils.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
 from src.utils.typing_utils import EmptyDict
+from utils.pydantic_models import LoadSettings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +26,9 @@ logger.setLevel(logging.INFO)
 
 def lambda_handler(event: dict, context: EmptyDict):
     s3_client: S3Client = boto3.client("s3")
-    PROCESS_ZONE_BUCKET_NAME = os.environ.get("PROCESS_ZONE_BUCKET_NAME")
+    load_settings = LoadSettings(
+        process_zone_bucket=os.environ.get("PROCESS_ZONE_BUCKET_NAME")  # type: ignore
+    )
     # LAMBDA_STATE_BUCKET_NAME = os.environ.get("LAMBDA_STATE_BUCKET_NAME")
     conn = connect_db("DATAWAREHOUSE")
 
@@ -61,7 +64,9 @@ def lambda_handler(event: dict, context: EmptyDict):
 
         for file_data in files_to_process:
             response = get_file_from_s3_bucket(
-                s3_client, bucket_name=PROCESS_ZONE_BUCKET_NAME, key=file_data["key"]
+                s3_client,
+                bucket_name=load_settings.process_zone_bucket,
+                key=file_data["key"],
             )
             df: pd.DataFrame = create_data_frame_from_parquet(
                 response["success"]["data"]

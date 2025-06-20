@@ -12,6 +12,22 @@ class ConnectionInfo(BaseModel):
     port: int
 
 
+class BaseLambdaSettings(BaseModel):
+    lambda_state_bucket: str
+
+
+class ExtractSettings(BaseLambdaSettings):
+    ingest_zone_bucket: str
+
+
+class TransformSettings(ExtractSettings):
+    process_zone_bucket: str
+
+
+class LoadSettings(BaseModel):
+    process_zone_bucket: str
+
+
 class EnvironmentVariables(BaseModel):
     environment_variable: str
 
