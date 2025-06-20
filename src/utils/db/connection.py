@@ -5,6 +5,8 @@ from typing import Literal
 from psycopg import Connection, Error, connect
 from psycopg.rows import DictRow, dict_row
 
+from utils.pydantic_models import ConnectionInfo
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -28,16 +30,17 @@ def connect_db(db_source: Literal["TOTESYS", "DATAWAREHOUSE"]) -> Connection[Dic
         raise ValueError(
             "db_source invalid, must be either 'TOTESYS' or 'DATAWAREHOUSE'"
         )
-
-    user = os.getenv(f"{db_source}_DB_USER")
-    password = os.getenv(f"{db_source}_DB_PASSWORD")
-    host = os.getenv(f"{db_source}_DB_HOST")
-    dbname = os.getenv(f"{db_source}_DB_DATABASE")
-    port = os.getenv(f"{db_source}_DB_PORT")
+    connection_info = ConnectionInfo(
+        user=os.getenv(f"{db_source}_DB_USER"),  # type: ignore
+        password=os.getenv(f"{db_source}_DB_PASSWORD"),  # type: ignore
+        host=os.getenv(f"{db_source}_DB_HOST"),  # type: ignore
+        dbname=os.getenv(f"{db_source}_DB_DATABASE"),  # type: ignore
+        port=os.getenv(f"{db_source}_DB_PORT"),  # type: ignore
+    )
 
     try:
         conn: Connection[DictRow] = connect(
-            f"user={user} password={password} host={host} dbname={dbname} port={int(port or 0000)}",
+            f"user={connection_info.user} password={connection_info.password} host={connection_info.host} dbname={connection_info.dbname} port={connection_info.port}",
             row_factory=dict_row,  # type: ignore
         )
 

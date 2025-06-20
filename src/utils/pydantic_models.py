@@ -4,6 +4,14 @@ from typing import List
 from pydantic import BaseModel, TypeAdapter
 
 
+class ConnectionInfo(BaseModel):
+    user: str
+    password: str
+    host: str
+    dbname: str
+    port: int
+
+
 class EnvironmentVariables(BaseModel):
     environment_variable: str
 
