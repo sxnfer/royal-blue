@@ -43,7 +43,7 @@ class FilesToProcessItem(BaseModel):
 FilesToProcessList = TypeAdapter(List[FilesToProcessItem])
 
 
-class FilesToProcess(BaseModel):
+class LambdaResult(BaseModel):
     files_to_process: List[FilesToProcessItem]
 
 

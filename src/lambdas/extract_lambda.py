@@ -5,7 +5,6 @@ from datetime import datetime
 from pprint import pformat
 
 import boto3
-import orjson
 from psycopg import Error
 from types_boto3_s3.client import S3Client
 
@@ -24,11 +23,11 @@ from src.utils.extract_lambda_utils import (
 from src.utils.parquets.create_parquet_from_data_frame import (
     create_parquet_from_data_frame,
 )
+from src.utils.pydantic_models import ExtractSettings, FilesToProcessItem, LambdaResult
 from src.utils.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
 from src.utils.state.get_current_state import get_current_state
 from src.utils.state.set_current_state import set_current_state
 from src.utils.typing_utils import EmptyDict
-from utils.pydantic_models import ExtractSettings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -75,15 +74,16 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
     Error: If a database error occurs during extraction.
     Exception: If any other error occurs during the process, such as S3 upload failure or unexpected issues.
     """
-    conn = connect_db("TOTESYS")
-    s3_client: S3Client = boto3.client("s3")
-    extract_settings = ExtractSettings(
-        ingest_zone_bucket=os.environ.get("INGEST_ZONE_BUCKET_NAME"),  # type: ignore
-        lambda_state_bucket=os.environ.get("LAMBDA_STATE_BUCKET_NAME"),  # type: ignore
-    )
-    result = {"files_to_process": []}
 
     try:
+        conn = connect_db("TOTESYS")
+        s3_client: S3Client = boto3.client("s3")
+        extract_settings = ExtractSettings(
+            ingest_zone_bucket=os.environ.get("INGEST_ZONE_BUCKET_NAME"),  # type: ignore
+            lambda_state_bucket=os.environ.get("LAMBDA_STATE_BUCKET_NAME"),  # type: ignore
+        )
+        lambda_result = LambdaResult(files_to_process=[])
+
         with conn:
             logger.info("Starting extraction process for all tables")
 
@@ -131,15 +131,15 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
                 if response.get("error"):
                     raise response["error"]["raw_response"]  # type: ignore
 
-                new_state_log_entry = {
-                    "table_name": table_name,
-                    "extraction_timestamp": extraction_timestamp,
-                    "last_updated": new_table_data_last_updated,
-                    "file_name": filename,
-                    "key": key,
-                }
+                new_state_log_entry = FilesToProcessItem(
+                    table_name=table_name,
+                    extraction_timestamp=extraction_timestamp,
+                    last_updated=new_table_data_last_updated,
+                    file_name=filename,
+                    key=key,
+                )
 
-                result["files_to_process"].append(new_state_log_entry)
+                lambda_result.files_to_process.append(new_state_log_entry)
 
                 updated_state_all = deepcopy(current_state)
                 updated_state_all["ingest_state"][table_name]["last_updated"] = (
@@ -147,7 +147,7 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
                     new_table_data_last_updated  # type: ignore
                 )
                 updated_state_all["ingest_state"][table_name]["ingest_log"].append(
-                    new_state_log_entry  # type: ignore
+                    new_state_log_entry.model_dump()  # type: ignore
                 )
 
                 set_current_state(
@@ -156,10 +156,10 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
 
                 logger.info(f"Finish extracting table:{table_name} data")
 
-        logger.info("Result of extraction process:\n%s", pformat(result))
+        logger.info("Result of extraction process:\n%s", pformat(lambda_result))
         logger.info("End of extraction process for all tables")
 
-        return orjson.dumps(result)
+        return lambda_result.model_dump_json()
 
     except Error as err:
         handle_psycopg_exceptions(err)
@@ -172,3 +172,7 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
 
 if __name__ == "__main__":
     pass
+    # result = lambda_handler({}, {})
+    # from pprint import pprint
+    # print("----------------------------------")
+    # pprint(result)

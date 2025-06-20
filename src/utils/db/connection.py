@@ -5,7 +5,7 @@ from typing import Literal
 from psycopg import Connection, Error, connect
 from psycopg.rows import DictRow, dict_row
 
-from utils.pydantic_models import ConnectionInfo
+from src.utils.pydantic_models import ConnectionInfo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
