@@ -52,5 +52,9 @@ set-tfvars:  ## Copy .env variables to terraform/terraform.auto.tfvars file
 run-tf-build-scripts:  ## Run all build scripts necessary to run terraform plan and apply
 	./build_lambda_layer.sh && ./build_extract_lambda_zip.sh && ./build_transform_lambda_zip.sh && ./build_load_lambda_zip.sh
 
+.PHONY: run-sql-files
+run-sql-files:  ## Run all SQL files in the sql directory
+	./sh_scripts/run_sql_files.sh 
+
 .PHONY: setup
 setup: sync run-tf-build-scripts set-tfvars checks ## Runs all checks and instalation scripts to get your project running
