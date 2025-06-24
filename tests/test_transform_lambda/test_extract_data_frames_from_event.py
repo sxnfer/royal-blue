@@ -24,17 +24,19 @@ def test_mock_event():
 
 @pytest.fixture
 def test_dataframe():
-    return pd.DataFrame({
-        "name": ["Charley", "San", "Oliver"],
-        "favourite_food": [
-            "Fish and chips",
-            "Jacket potato",
-            "Spaghetti bolognese",
-        ],
-        "favourite_ice_cream": ["Strawberry", "Chocolate", "Vanilla"],
-        "likes_spice": [True, False, True],
-        "eats_out_per_week": [2, 0, 3],
-    })
+    return pd.DataFrame(
+        {
+            "name": ["Charley", "San", "Oliver"],
+            "favourite_food": [
+                "Fish and chips",
+                "Jacket potato",
+                "Spaghetti bolognese",
+            ],
+            "favourite_ice_cream": ["Strawberry", "Chocolate", "Vanilla"],
+            "likes_spice": [True, False, True],
+            "eats_out_per_week": [2, 0, 3],
+        }
+    )
 
 
 @pytest.mark.describe("get_dataframes_from_event Utility Function Behaviour")
