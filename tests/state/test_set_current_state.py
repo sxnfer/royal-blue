@@ -1,67 +1,64 @@
-import json
-from unittest.mock import patch
+from datetime import datetime
 
-import boto3
 import pytest
-from moto import mock_aws
 
+from src.utils.pydantic_models import State
 from src.utils.state.set_current_state import set_current_state
 
 
-@pytest.mark.describe("set_current_state Behaviour")
-@pytest.fixture
-def s3_fixture():
-    with mock_aws():
-        s3 = boto3.client("s3", region_name="eu-west-2")
-        bucket = "test-bucket"
-        s3.create_bucket(
-            Bucket=bucket,
-            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-        )
-        yield s3, bucket
-
-
+@pytest.mark.describe("Test set_current_state function")
 class TestSetCurrentState:
-    @pytest.mark.it("Successfully uploads the expected JSON to S3")
-    def test_set_current_state_success(self, s3_fixture):
-        s3, bucket = s3_fixture
-        mock_state = {"ingest_state": [{"table_name": "test_table"}]}
+    @pytest.mark.it("Successfully uploads the expected State file to S3")
+    def test_set_current_state_success(self, s3_client_with_empty_test_bucket):
+        s3_client, bucket_name = s3_client_with_empty_test_bucket
+        file_name = "lambda_state.json"
+        mock_state = State()
 
-        set_current_state(mock_state, bucket, s3)
-
-        response = s3.get_object(Bucket=bucket, Key="lambda_state.json")
-
-        content = response["Body"].read().decode("utf-8")
-        data = json.loads(content)
-
-        assert data == mock_state
-
-    def test_set_new_overwrites_current_state(self, s3_fixture):
-        s3, bucket = s3_fixture
-        current_state = {"json data": "old"}
-        new_state = {"json data": "new"}
-
-        s3.put_object(
-            Bucket=bucket, Key="lambda_state.json", Body=json.dumps(current_state)
+        set_current_state(
+            new_state=mock_state,
+            bucket_name=bucket_name,
+            s3_client=s3_client,
+            file_name=file_name,
         )
 
-        set_current_state(new_state, bucket, s3)
+        s3_reponse = s3_client.get_object(Bucket=bucket_name, Key=file_name)
 
-        response = s3.get_object(Bucket=bucket, Key="lambda_state.json")
+        content = s3_reponse["Body"].read()
+        uploaded_state = State.model_validate_json(content)
+
+        assert mock_state == uploaded_state
+
+    # @pytest.mark.skip
+    @pytest.mark.it(
+        "check that it raises an exception if an invalid state object is passed"
+    )
+    def test_raises_exception_on_invalid_state(self, s3_client_with_empty_test_bucket):
+        s3_client, bucket_name = s3_client_with_empty_test_bucket
+        with pytest.raises(TypeError):
+            set_current_state(
+                new_state={"invalid": "state"},  # type: ignore
+                bucket_name=bucket_name,
+                s3_client=s3_client,
+            )
+
+    # @pytest.mark.skip
+    @pytest.mark.it("check that a new state object replaces the previous one")
+    def test_set_new_overwrites_current_state(self, s3_client_with_empty_test_bucket):
+        s3_client, bucket = s3_client_with_empty_test_bucket
+        current_state = State()
+        current_state.extract_state.last_updated = datetime.now()
+        new_state = State()
+
+        s3_client.put_object(
+            Bucket=bucket, Key="lambda_state.json", Body=current_state.model_dump_json()
+        )
+
+        set_current_state(new_state, bucket, s3_client)
+
+        response = s3_client.get_object(Bucket=bucket, Key="lambda_state.json")
 
         content = response["Body"].read().decode("utf-8")
-        data = json.loads(content)
+        data = State.model_validate_json(content)
 
         assert data == new_state
-
-    @pytest.mark.it("Raises an exception when add_file_to_s3_bucket returns an error.")
-    def test_add_file_returns_error(self, s3_fixture):
-        s3, bucket = s3_fixture
-        mock_state = {"some": "state"}
-
-        with patch(
-            "src.utils.state.set_current_state.add_file_to_s3_bucket"
-        ) as mock_upload:
-            mock_upload.return_value = {"error": "Upload failed"}
-            with pytest.raises(Exception, match="Failed to upload current state to S3"):
-                set_current_state(mock_state, bucket, s3)
+        assert data != current_state
