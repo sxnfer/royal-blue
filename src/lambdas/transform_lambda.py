@@ -1,11 +1,9 @@
-import json
 import logging
 import os
 from copy import deepcopy
 from datetime import datetime
 
 import boto3
-import orjson
 from types_boto3_s3.client import S3Client
 
 from src.utils.dimensions.dim_counterparty_transform import (
@@ -23,8 +21,7 @@ from src.utils.parquets.create_parquet_from_data_frame import (
     create_parquet_from_data_frame,
 )
 from src.utils.pydantic_models import (
-    FilesToProcessList,
-    State,
+    LambdaResult,
     TransformSettings,
 )
 from src.utils.state.get_current_state import get_current_state
@@ -32,9 +29,8 @@ from src.utils.state.set_current_state import set_current_state
 from src.utils.transform_lambda_utils.transform_lambda_utils import (
     add_log_to_result_and_state,
     get_dataframes_from_files_to_process,
-    get_log_item_df_s3_upload,
+    get_log_item_and_upload_df_to_s3,
     initialize_dim_date,
-    initialize_transform_state,
 )
 
 logging.basicConfig(
@@ -45,7 +41,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context) -> str:
     transform_settings = TransformSettings(
         process_zone_bucket=os.environ.get("PROCESS_ZONE_BUCKET_NAME"),  # type: ignore
         ingest_zone_bucket=os.environ.get("INGEST_ZONE_BUCKET_NAME"),  # type: ignore
@@ -56,34 +52,26 @@ def lambda_handler(event, context):
     logger.info("Starting Transformation Lambda")
 
     # # ! fix datetime not coming in
-    files_to_process = FilesToProcessList.validate_python(
-        orjson.loads(json.dumps(event)).get("files_to_process")
-    )
-    current_state = State.model_validate(
-        get_current_state(s3_client, transform_settings.lambda_state_bucket)
-    ).model_dump()
+    files_to_process = LambdaResult.model_validate(event).files_to_process
+    current_state = get_current_state(s3_client, transform_settings.lambda_state_bucket)
 
     final_state = deepcopy(current_state)
 
-    result: dict[str, list[dict]] = {"files_to_process": []}
+    result = LambdaResult()
 
     if not files_to_process:
         logger.info("Finish Transformation Lambda with no files to process.")
-        return result
+        return result.model_dump_json()
 
-    if not current_state.get("transform_state", {}).get("last_updated", None):
+    if not current_state.transform_state.last_updated:
         logger.info(
             "Running transform process for the first time. Initializing dim_date table"
         )
 
-        final_state = initialize_transform_state(
-            final_state, [file.table_name for file in files_to_process]
-        )
-
         initialize_dim_date(
-            create_dim_date_df_func=dim_date_dataframe,  # type: ignore
+            create_dim_date_df_func=dim_date_dataframe,
             s3_client=s3_client,
-            bucket_name=transform_settings.process_zone_bucket,  # type: ignore
+            bucket_name=transform_settings.process_zone_bucket,
             result=result,
             final_state=final_state,
         )
@@ -94,7 +82,7 @@ def lambda_handler(event, context):
 
     all_tables_dfs: dict = get_dataframes_from_files_to_process(
         s3_client,
-        transform_settings.ingest_zone_bucket,  # type: ignore
+        transform_settings.ingest_zone_bucket,
         files_to_process,
     )
 
@@ -136,23 +124,24 @@ def lambda_handler(event, context):
                 new_table_name = "fact_sales_order"
             case _:
                 continue
-        transformation_timestamp = datetime.now()
 
-        log_item = get_log_item_df_s3_upload(
+        operation_timestamp = datetime.now()
+
+        log_item = get_log_item_and_upload_df_to_s3(
             s3_client=s3_client,
             bucket_name=transform_settings.process_zone_bucket,  # type: ignore
-            last_updated=last_updated,
+            last_updated=last_updated,  # type: ignore
             new_table_name=new_table_name,
             df=df,
-            transformation_timestamp=transformation_timestamp,
+            operation_timestamp=operation_timestamp,
             create_parquet_from_df_func=create_parquet_from_data_frame,  # type: ignore
         )
         add_log_to_result_and_state(
             log=log_item,  # type: ignore
             result=result,
             state=final_state,
-            last_updated=transformation_timestamp,
-            processing_timestamp=transformation_timestamp,
+            last_updated=operation_timestamp,
+            operation_timestamp=operation_timestamp,
             table_name=table_name,
         )
         logger.info(
@@ -163,7 +152,7 @@ def lambda_handler(event, context):
 
     logger.info("Transform process successfully ended.")
 
-    return orjson.dumps(result)
+    return result.model_dump_json()
 
 
 if __name__ == "__main__":
@@ -171,77 +160,77 @@ if __name__ == "__main__":
         "files_to_process": [
             {
                 "table_name": "counterparty",
-                "extraction_timestamp": "2025-06-11T22:07:36.781481",
+                "operation_timestamp": "2025-06-11T22:07:36.781481",
                 "last_updated": "2022-11-03T14:20:51.563000",
                 "file_name": "counterparty_2022-11-3_14-20-51_563000.parquet",
                 "key": "2022/11/3/counterparty_2022-11-3_14-20-51_563000.parquet",
             },
             {
                 "table_name": "address",
-                "extraction_timestamp": "2025-06-11T22:07:40.862190",
+                "operation_timestamp": "2025-06-11T22:07:40.862190",
                 "last_updated": "2022-11-03T14:20:49.962000",
                 "file_name": "address_2022-11-3_14-20-49_962000.parquet",
                 "key": "2022/11/3/address_2022-11-3_14-20-49_962000.parquet",
             },
             {
                 "table_name": "department",
-                "extraction_timestamp": "2025-06-11T22:07:41.181464",
+                "operation_timestamp": "2025-06-11T22:07:41.181464",
                 "last_updated": "2022-11-03T14:20:49.962000",
                 "file_name": "department_2022-11-3_14-20-49_962000.parquet",
                 "key": "2022/11/3/department_2022-11-3_14-20-49_962000.parquet",
             },
             {
                 "table_name": "purchase_order",
-                "extraction_timestamp": "2025-06-11T22:07:41.742727",
+                "operation_timestamp": "2025-06-11T22:07:41.742727",
                 "last_updated": "2025-06-11T17:12:10.117000",
                 "file_name": "purchase_order_2025-6-11_17-12-10_117000.parquet",
                 "key": "2025/6/11/purchase_order_2025-6-11_17-12-10_117000.parquet",
             },
             {
                 "table_name": "staff",
-                "extraction_timestamp": "2025-06-11T22:07:43.222837",
+                "operation_timestamp": "2025-06-11T22:07:43.222837",
                 "last_updated": "2022-11-03T14:20:51.563000",
                 "file_name": "staff_2022-11-3_14-20-51_563000.parquet",
                 "key": "2022/11/3/staff_2022-11-3_14-20-51_563000.parquet",
             },
             {
                 "table_name": "payment_type",
-                "extraction_timestamp": "2025-06-11T22:07:43.421462",
+                "operation_timestamp": "2025-06-11T22:07:43.421462",
                 "last_updated": "2022-11-03T14:20:49.962000",
                 "file_name": "payment_type_2022-11-3_14-20-49_962000.parquet",
                 "key": "2022/11/3/payment_type_2022-11-3_14-20-49_962000.parquet",
             },
             {
                 "table_name": "payment",
-                "extraction_timestamp": "2025-06-11T22:07:44.884584",
+                "operation_timestamp": "2025-06-11T22:07:44.884584",
                 "last_updated": "2025-06-11T18:52:10.193000",
                 "file_name": "payment_2025-6-11_18-52-10_193000.parquet",
                 "key": "2025/6/11/payment_2025-6-11_18-52-10_193000.parquet",
             },
             {
                 "table_name": "transaction",
-                "extraction_timestamp": "2025-06-11T22:07:58.845049",
+                "operation_timestamp": "2025-06-11T22:07:58.845049",
                 "last_updated": "2025-06-11T18:52:10.193000",
                 "file_name": "transaction_2025-6-11_18-52-10_193000.parquet",
                 "key": "2025/6/11/transaction_2025-6-11_18-52-10_193000.parquet",
             },
             {
                 "table_name": "design",
-                "extraction_timestamp": "2025-06-11T22:08:06.163722",
+                "operation_timestamp": "2025-06-11T22:08:06.163722",
                 "last_updated": "2025-06-11T14:46:09.703000",
                 "file_name": "design_2025-6-11_14-46-9_703000.parquet",
                 "key": "2025/6/11/design_2025-6-11_14-46-9_703000.parquet",
             },
             {
                 "table_name": "sales_order",
-                "extraction_timestamp": "2025-06-11T22:08:11.062634",
+                "operation_timestamp": "2025-06-11T22:08:11.062634",
                 "last_updated": "2025-06-11T18:52:10.193000",
                 "file_name": "sales_order_2025-6-11_18-52-10_193000.parquet",
                 "key": "2025/6/11/sales_order_2025-6-11_18-52-10_193000.parquet",
             },
             {
                 "table_name": "currency",
-                "extraction_timestamp": "2025-06-11T22:08:17.724489",
+                "operation_timestamp": "2025-06-11T22:08:17.724489",
                 "last_updated": "2022-11-03T14:20:49.962000",
                 "file_name": "currency_2022-11-3_14-20-49_962000.parquet",
                 "key": "2022/11/3/currency_2022-11-3_14-20-49_962000.parquet",

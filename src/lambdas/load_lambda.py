@@ -1,9 +1,8 @@
-import json
 import logging
 import os
+from typing import List
 
 import boto3
-import orjson
 import pandas as pd
 from types_boto3_s3.client import S3Client
 
@@ -14,7 +13,7 @@ from src.utils.parquets.create_data_frame_from_parquet import (
 )
 from src.utils.s3.get_file_from_s3_bucket import get_file_from_s3_bucket
 from src.utils.typing_utils import EmptyDict
-from utils.pydantic_models import LoadSettings
+from utils.pydantic_models import FactOrDimToProcess, LambdaResult, LoadSettings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -32,7 +31,7 @@ def lambda_handler(event: dict, context: EmptyDict):
     # LAMBDA_STATE_BUCKET_NAME = os.environ.get("LAMBDA_STATE_BUCKET_NAME")
     conn = connect_db("DATAWAREHOUSE")
 
-    files_to_process = orjson.loads(json.dumps(event)).get("files_to_process")
+    files_to_process = LambdaResult.model_validate(event).files_to_process
     logger.info("Start Loading files into Data Warehouse")
 
     """
@@ -59,42 +58,46 @@ def lambda_handler(event: dict, context: EmptyDict):
         return
 
     try:
-        dims_to_process = []
-        facts_to_process = []
+        dims_to_process: List[FactOrDimToProcess] = []
+        facts_to_process: List[FactOrDimToProcess] = []
 
-        for file_data in files_to_process:
+        for dim_to_process in files_to_process:
             response = get_file_from_s3_bucket(
                 s3_client,
                 bucket_name=load_settings.process_zone_bucket,
-                key=file_data["key"],
+                key=dim_to_process.key,
             )
-            df: pd.DataFrame = create_data_frame_from_parquet(
-                response["success"]["data"]
-            )
+            parquet = response["success"]["data"]
 
-            if file_data["table_name"].startswith("dim"):
-                dims_to_process.append({
-                    "table_name": file_data["table_name"],
-                    "data_frame": df,
-                })
+            df: pd.DataFrame = create_data_frame_from_parquet(parquet)
+
+            if dim_to_process.table_name.startswith("dim"):
+                dims_to_process.append(
+                    FactOrDimToProcess(
+                        table_name=dim_to_process.table_name,
+                        data_frame=df,
+                    )
+                )
             else:
-                facts_to_process.append({
-                    "table_name": file_data["table_name"],
-                    "data_frame": df,
-                })
+                facts_to_process.append(
+                    FactOrDimToProcess(
+                        table_name=dim_to_process.table_name,
+                        data_frame=df,
+                    )
+                )
 
         with conn:
-            for file_data in dims_to_process:
+            for dim_to_process in dims_to_process:
                 logger.info(
-                    f"Processing {len(file_data['data_frame'])} rows into table {file_data['table_name']}."
+                    f"Processing {len(dim_to_process.data_frame)} rows into table {dim_to_process.table_name}."
                 )
                 create_db_entries_from_df(
-                    conn, file_data["table_name"], file_data["data_frame"]
+                    conn, dim_to_process.table_name, dim_to_process.data_frame
                 )
 
-            for file_data in facts_to_process:
+            for fact_to_process in facts_to_process:
                 create_db_entries_from_df(
-                    conn, file_data["table_name"], file_data["data_frame"]
+                    conn, fact_to_process.table_name, fact_to_process.data_frame
                 )
 
     except Exception as err:
@@ -117,49 +120,49 @@ if __name__ == "__main__":
                 "key": "2022/11/3/dim_counterparty_2022-11-3_14-20-51_563000.parquet",
                 "filename": "dim_counterparty_2022-11-3_14-20-51_563000.parquet",
                 "last_updated": "2022-11-03T14:20:51.563000",
-                "transformation_timestamp": "2025-06-10T23:28:03.354725",
+                "operation_timestamp": "2025-06-10T23:28:03.354725",
             },
             {
                 "table_name": "dim_location",
                 "key": "2022/11/3/dim_location_2022-11-3_14-20-49_962000.parquet",
                 "filename": "dim_location_2022-11-3_14-20-49_962000.parquet",
                 "last_updated": "2022-11-03T14:20:49.962000",
-                "transformation_timestamp": "2025-06-10T23:28:03.521823",
+                "operation_timestamp": "2025-06-10T23:28:03.521823",
             },
             {
                 "table_name": "dim_staff",
                 "key": "2022/11/3/dim_staff_2022-11-3_14-20-51_563000.parquet",
                 "filename": "dim_staff_2022-11-3_14-20-51_563000.parquet",
                 "last_updated": "2022-11-03T14:20:51.563000",
-                "transformation_timestamp": "2025-06-10T23:28:03.694398",
+                "operation_timestamp": "2025-06-10T23:28:03.694398",
             },
             {
                 "table_name": "dim_design",
                 "key": "2025/6/10/dim_design_2025-6-10_17-51-9_671000.parquet",
                 "filename": "dim_design_2025-6-10_17-51-9_671000.parquet",
                 "last_updated": "2025-06-10T17:51:09.671000",
-                "transformation_timestamp": "2025-06-10T23:28:03.874850",
+                "operation_timestamp": "2025-06-10T23:28:03.874850",
             },
             {
                 "table_name": "fact_sales_order",
                 "key": "2025/6/10/fact_sales_order_2025-6-10_18-1-10_155000.parquet",
                 "filename": "fact_sales_order_2025-6-10_18-1-10_155000.parquet",
                 "last_updated": "2025-06-10T18:01:10.155000",
-                "transformation_timestamp": "2025-06-10T23:28:06.736708",
+                "operation_timestamp": "2025-06-10T23:28:06.736708",
             },
             {
                 "table_name": "dim_currency",
                 "key": "2022/11/3/dim_currency_2022-11-3_14-20-49_962000.parquet",
                 "filename": "dim_currency_2022-11-3_14-20-49_962000.parquet",
                 "last_updated": "2022-11-03T14:20:49.962000",
-                "transformation_timestamp": "2025-06-10T23:28:06.940325",
+                "operation_timestamp": "2025-06-10T23:28:06.940325",
             },
             {
                 "table_name": "dim_date",
                 "key": "2025/6/10/dim_date_2025-6-10_23-28-1_818204.parquet",
                 "filename": "dim_date_2025-6-10_23-28-1_818204.parquet",
                 "last_updated": "2025-06-10T23:28:01.818204",
-                "transformation_timestamp": "2025-06-10T23:28:08.095612",
+                "operation_timestamp": "2025-06-10T23:28:08.095612",
             },
         ]
     }

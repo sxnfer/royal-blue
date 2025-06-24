@@ -18,12 +18,11 @@ from src.utils.extract_lambda_utils import (
     create_data_frame_from_list,
     create_parquet_metadata,
     get_last_updated_from_raw_table_data,
-    initialize_table_state,
 )
 from src.utils.parquets.create_parquet_from_data_frame import (
     create_parquet_from_data_frame,
 )
-from src.utils.pydantic_models import ExtractSettings, FilesToProcessItem, LambdaResult
+from src.utils.pydantic_models import ExtractSettings, LambdaResult, StateLogItem
 from src.utils.s3.add_file_to_s3_bucket import add_file_to_s3_bucket
 from src.utils.state.get_current_state import get_current_state
 from src.utils.state.set_current_state import set_current_state
@@ -95,18 +94,18 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
                 current_state = get_current_state(
                     s3_client, extract_settings.lambda_state_bucket
                 )
-                current_state = initialize_table_state(current_state, table_name)
+                updated_state = deepcopy(current_state)
 
-                current_state_last_updated: datetime | None = current_state[
-                    "ingest_state"
-                ][table_name]["last_updated"]
+                updated_state_table_last_updated: datetime | None = (
+                    updated_state.extract_state.tables[table_name].last_updated
+                )
 
                 table_data = get_table_data(
                     conn,
                     table_name,  # type: ignore
-                    current_state_last_updated,
+                    updated_state_table_last_updated,
                 )
-                extraction_timestamp = datetime.now()
+                operation_timestamp = datetime.now()
 
                 if not len(table_data):
                     logger.info(f"No new data to extract from table: {table_name}")
@@ -131,9 +130,9 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
                 if response.get("error"):
                     raise response["error"]["raw_response"]  # type: ignore
 
-                new_state_log_entry = FilesToProcessItem(
+                new_state_log_entry = StateLogItem(
                     table_name=table_name,
-                    extraction_timestamp=extraction_timestamp,
+                    operation_timestamp=operation_timestamp,
                     last_updated=new_table_data_last_updated,
                     file_name=filename,
                     key=key,
@@ -141,12 +140,12 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
 
                 lambda_result.files_to_process.append(new_state_log_entry)
 
-                updated_state_all = deepcopy(current_state)
-                updated_state_all["ingest_state"][table_name]["last_updated"] = (
+                updated_state_all = deepcopy(updated_state)
+                updated_state_all.extract_state.tables[table_name].last_updated = (
                     #  TODO THEO check unbound error when not ignoring types
                     new_table_data_last_updated  # type: ignore
                 )
-                updated_state_all["ingest_state"][table_name]["ingest_log"].append(
+                updated_state_all.extract_state.tables[table_name].log_items.append(
                     new_state_log_entry.model_dump()  # type: ignore
                 )
 
@@ -172,7 +171,8 @@ def lambda_handler(event: EmptyDict, context: EmptyDict):
 
 if __name__ == "__main__":
     pass
-    # result = lambda_handler({}, {})
-    # from pprint import pprint
-    # print("----------------------------------")
-    # pprint(result)
+    result = lambda_handler({}, {})
+    from pprint import pprint
+
+    print("----------------------------------")
+    pprint(result)
