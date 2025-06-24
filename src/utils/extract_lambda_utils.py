@@ -6,6 +6,7 @@ from typing import List
 import pandas as pd
 
 from src.utils.custom_errors import InvalidEmptyList
+from src.utils.pydantic_models import State, StateTableItem
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -54,29 +55,6 @@ def get_last_updated_from_raw_table_data(rows: List[dict]) -> datetime:
                 list_of_datetimes.append(value)
 
     return max(list_of_datetimes)
-
-
-def initialize_table_state(current_state, table_name):
-    """
-    Ensures the ingest state for a given table exists in the current state dictionary.
-    If not present, it initializes the table with default metadata.
-
-    Args:
-        current_state (dict): The current state containing ingest information.
-        table_name (str): The name of the table to initialize.
-
-    Returns:
-        dict: The updated or unchanged state dictionary.
-    """
-    if current_state["ingest_state"].get(table_name):
-        return current_state
-
-    new_state = deepcopy(current_state)
-    new_state["ingest_state"][table_name] = {
-        "last_updated": None,
-        "ingest_log": [],
-    }
-    return new_state
 
 
 def create_parquet_metadata(
