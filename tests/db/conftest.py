@@ -1,8 +1,17 @@
 import os
+from typing import Any, Iterator, List
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from psycopg import Connection
+from psycopg import Connection, connect, conninfo, sql
+from psycopg.rows import DictRow, dict_row
+from pytest_postgresql.executor import PostgreSQLExecutor
+from pytest_postgresql.janitor import DatabaseJanitor
+
+from sql.create_totesys_tables_query import (
+    create_totesys_tables_query,
+)
+from sql.seed_data.totesys_seed_data import totesys_seed_data
 
 
 @pytest.fixture(scope="function")
@@ -79,3 +88,56 @@ def patched_connect(mock_connect):
         "src.utils.db.connection.connect", return_value=mock_connect
     ) as mock_patch:
         yield mock_patch
+
+
+@pytest.fixture(scope="function")
+def totesys_seeded_conn(
+    postgresql_proc: PostgreSQLExecutor,
+) -> Iterator[Connection[DictRow]]:
+    dbname = "my_test_database"
+    user = postgresql_proc.user
+    password = "secret_password"
+    host = postgresql_proc.host
+    port = postgresql_proc.port
+    version = postgresql_proc.version
+
+    connection_info = conninfo.make_conninfo(
+        dbname=dbname,
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+    )
+
+    with DatabaseJanitor(
+        dbname=dbname,
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        version=version,
+    ):
+        conn: Connection[DictRow] = connect(connection_info, row_factory=dict_row)  # type: ignore
+        with conn.cursor() as cursor:
+            cursor.execute(create_totesys_tables_query)
+
+            for data in totesys_seed_data:
+                table_name = data["table_name"]
+
+                seed_data: List[dict[str, Any]] = data["seed_data"]
+                columns = list(seed_data[0].keys())
+                values_to_insert = [tuple(row.values()) for row in seed_data]
+
+                insert_query = sql.SQL("""
+                    INSERT INTO {table_name} ({columns})
+                    VALUES ({values})
+                """).format(
+                    table_name=sql.Identifier(table_name),
+                    columns=sql.SQL(",").join(map(sql.Identifier, columns)),
+                    values=sql.SQL(",").join(sql.Placeholder() * len(columns)),
+                )
+                cursor.executemany(insert_query, values_to_insert)
+            conn.commit()
+        print("conn.closed", conn.closed)
+        print("conn.connection", conn.connection)
+        yield conn

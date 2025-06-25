@@ -23,6 +23,8 @@ dev = [
     "pyarrow>=20.0.0",
     "ipykernel>=6.29.5",
     "types-boto3-custom",
+    "pytest-postgresql>=7.0.2",
+    "ipytest>=0.14.2",
 ]
 
 [tool.pytest.ini_options]
