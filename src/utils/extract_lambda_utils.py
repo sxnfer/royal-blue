@@ -1,12 +1,10 @@
 import logging
-from copy import deepcopy
 from datetime import datetime
 from typing import List
 
 import pandas as pd
 
 from src.utils.custom_errors import InvalidEmptyList
-from src.utils.pydantic_models import State, StateTableItem
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
