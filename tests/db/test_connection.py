@@ -8,7 +8,7 @@ from psycopg.rows import dict_row
 from src.utils.db.connection import connect_db
 
 
-@pytest.mark.describe("Tests connect_db")
+@pytest.mark.describe("Tests connect_db (including integration tests)")
 class TestConnectDb:
     @pytest.mark.it("check that it returns a Connection object")
     def test_return_value(self, patched_connect):
