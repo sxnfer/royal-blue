@@ -12,33 +12,37 @@
 
 ## Introduction
 
-Welcome to **Royal Blue**! Your go-to toolkit for streamlined data workflows, automated infrastructure, using Python and Terraform with best practices for testing, linting, formatting, and deployment.
+**Royal Blue** is an Extract, Load, Transform (ETL) data pipeline built on top of AWS using Python, Terraform and Pandas.
 
-Think of it as the secret sauce that keeps your ETL and cloud setup running smoothly without the hassle. ;)
+It was built as a graduation project for the [Northcoders](https://www.northcoders.com) Data Engineering in Python bootcamp that ran from March to June 2025.
 
 ---
 
 ## Project Description
 
-Jokes aside, the purpose of this repository is to build an entire ETL (Extract, Load, Transform) data pipeline in AWS (Amazon Web Services).
+The purpose of this repository is to build an entire ETL (Extract, Load, Transform) data pipeline in AWS (Amazon Web Services).
 
-Extracting data from an OLTP (Online Transaction Processing Database) PostgreSQL database and loading it into an OLAP (Online Analytical Processing Database) database.
+It implements a robust and scalable solution for extracting, transforming, and loading data from an OLTP (Online Transaction Processing) PostgreSQL database and loading it into an OLAP (Online Analytical Processing) database.
 
-The data  is transformed from transactional day to day business data into a Data Analisys ready format, suitable for multiple Business Inteligence purposes.
+Follow these links for the [origin](https://dbdiagram.io/d/6332fecf7b3d2034ffcaaa92) and [destination](https://dbdiagram.io/d/63a19c5399cb1f3b55a27eca) database Entity Relationship Diagrams.
+
+The data is transformed from transactional day-to-day business data into a Data Analysis-ready format, suitable for multiple Business intelligence purposes.
 
 It uses [Python](https://www.python.org) as the main programming language, followed by [Terraform](https://www.hashicorp.com/en/products/terraform) for infrastructure as code. It also uses Bash and SQL Scripts to help with build processes and integration testing, and has a full-featured Makefile for convenience.
     
+This project follows the specs proposed for the [Northcoders Data Engineering graduation project](https://github.com/northcoders/de-project-specification/blob/main/README.md) and was developed as a group effort by [@theorib](https://github.com/theorib), [@Brxzee](https://github.com/Brxzee), [@charleybolton](https://github.com/charleybolton), [@JanetteSamuels](https://github.com/JanetteSamuels), [@sxnfer](https://github.com/sxnfer) and [@josephtheodore](https://github.com/josephtheodore).
 
 ---
 
 ## Requirements
 
-- Make sure [uv](https://docs.astral.sh/uv/) is installed by following the [official guide](https://docs.astral.sh/uv/getting-started/installation/). We use it to manage Python environments, dependencies, to run scripts, and for our build process.
-- For an even smoother experience, enable uv command shell autocompletion as explained [here](https://docs.astral.sh/uv/getting-started/installation/#shell-autocompletion).
+- This project uses [uv](https://docs.astral.sh/uv/) to manage Python environments, dependencies, running scripts, and for our build process. Make sure it is installed by following the [official guide](https://docs.astral.sh/uv/getting-started/installation/).
 
-- You will also need to install the [latest version of Python](https://www.python.org/downloads/) (3.13.3 at the time of this writting).
+- You will also need to install the [latest version of Python](https://www.python.org/downloads/) (3.13.3 at the time of this writing).
 
-- For local development, you will need to install the [AWS CLI](https://aws.amazon.com/cli/).
+- For local development, you will need the [AWS CLI](https://aws.amazon.com/cli/) installed and configured with your AWS credentials.
+
+- To run some of the integration tests, you will need to [install PostgreSQL locally](https://www.postgresql.org/download/) v14 or higher. 
 
 ---
 
@@ -48,28 +52,29 @@ It uses [Python](https://www.python.org) as the main programming language, follo
 - Python 3.13.3+  
 
 **Core Python Dependencies**  
-- [`psycopg3` (PostgreSQL database adapter)](https://www.psycopg.org/psycopg3/docs/)  
-- [`boto3` for AWS SDK integration](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
-- [`pandas` for data manipulation](https://pandas.pydata.org/docs/)
-- [`pyarrow` for Parquet file handling](https://arrow.apache.org/docs/python/)
-- [`orjson` (fast JSON serialisation/deserialization)](https://github.com/ijl/orjson) 
+- [Psycopg 3](https://www.psycopg.org/psycopg3/docs/) - PostgreSQL database adapter
+- [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) - for AWS SDK integration
+- [pandas](https://pandas.pydata.org/docs/) - for data manipulation
+- [PyArrow](https://arrow.apache.org/docs/python/) - for Parquet file handling
+- [Pydantic](https://docs.pydantic.dev/latest/) - for data validation and JSON serialisation
 
 **Development Dependencies**  
-- [`pytest` and related plugins for testing and coverage](https://docs.pytest.org/en/stable/)  
-- [`ruff` for linting and formatting](https://docs.astral.sh/ruff/)
-- [`moto` for AWS service mocking during tests](https://docs.getmoto.org/en/latest/docs/getting_started.html)
-- [`bandit` for vulnerability and security scanning of source code](https://bandit.readthedocs.io/en/latest/)
-- [`ipykernel` for VS Code Jupyter notebook support](https://ipykernel.readthedocs.io/en/stable/)
+- [pytest](https://docs.pytest.org/en/stable/) - and related plugins for testing and coverage  
+- [pytest-postgresql](https://github.com/dbfixtures/pytest-postgresql) - using for running integration tests against local PostgreSQL databases  
+- [Ruff](https://docs.astral.sh/ruff/) - for linting and formatting
+- [Moto](https://docs.getmoto.org/en/latest/docs/getting_started.html) - for mocking AWS services during tests
+- [Bandit](https://bandit.readthedocs.io/en/latest/) - for vulnerability and security scanning of source code
+- [IPython Kernel](https://ipykernel.readthedocs.io/en/stable/) - for VS Code Jupyter notebook support, used for testing and experimenting
 
 **Databases**  
-- [PostgreSQL](https://www.postgresql.org) (used locally for integration tests, and being the database on both sides of the pipeline).
+- [PostgreSQL](https://www.postgresql.org) (used locally for integration tests, as well as being the database used on both sides of the data pipeline).
 
 **AWS**  
-- Lambda, S3, Step Functions, IAM, Cloudwatch, SNS Email alerts, etc. All accessed using [`boto3`](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) deployed with [Terraform](https://www.hashicorp.com/en/products/terraform).
+- Lambda, S3, Step Functions, IAM, Cloudwatch, SNS Email alerts, etc. All accessed using [`boto3`](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) deployed with [Terraform](https://www.hashicorp.com/en/products/terraform) and tested using Moto.
 
 **Utilities & Tooling**  
 - [`uv`](https://docs.astral.sh/uv/) for managing Python environments, dependencies, and running scripts
-- `Makefile` for task automation (testing, linting, formatting, deployment).
+- `Makefile` for convenience, centralising and simplifying the project’s most common commands (testing, linting, formatting, deployment, etc).
 
 **Local Testing Scripts**  
 - Bash scripts to run SQL test files against the local PostgreSQL database and capture output for validation.
@@ -112,7 +117,7 @@ It uses [Python](https://www.python.org) as the main programming language, follo
 
 4. If you forked this repository and want CI/CD to work as intended, you will have to create GitHub Secrets for the above environment variables (except for the local integration ones). 
 
-5. Run the magic words (this installs dependencies, runs tests and checks):
+5. Run the setup script (this will install dependencies, run tests and checks):
 
     ```bash
     make setup
@@ -165,15 +170,13 @@ Use these main commands for common tasks:
 |-----------------------|-----------------------------------------------------|
 | `make setup`          | Complete installation and validation (sync, build, checks) |
 | `make test`           | Run all tests                                      |
-| `make lint`           | Run linter and auto-fix code issues                 |
-| `make fmt`            | Format source code                                  |
 | `make fix`            | Run formatter and linter                            |
 | `make safe`           | Run security scans                                 |
-| `make sync`           | Install Python dependencies                         |
 | `make help`           | Show all available make commands                    |
 
-For a full list of commands and detailed descriptions, run:
+For a full list of commands and their description, run:
 
 ```bash
 make help
 ```
+
